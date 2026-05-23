@@ -1,6 +1,6 @@
 package com.example.bibliothequeapp;
 
-import android.content.Intent;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,14 +9,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class LivreAdapter extends RecyclerView.Adapter<LivreAdapter.LivreViewHolder> {
 
-    private ArrayList<Livre> listeLivres;
+    public interface OnLivreClickListener {
+        void onLivreClick(Livre livre);
+        void onLivreLongClick(Livre livre, int position);
+    }
 
-    public LivreAdapter(ArrayList<Livre> listeLivres) {
+    private List<Livre> listeLivres;
+    private OnLivreClickListener listener;
+
+    public LivreAdapter(List<Livre> listeLivres, OnLivreClickListener listener) {
         this.listeLivres = listeLivres;
+        this.listener = listener;
     }
 
     @NonNull
@@ -36,37 +43,26 @@ public class LivreAdapter extends RecyclerView.Adapter<LivreAdapter.LivreViewHol
         holder.tvIsbnLivre.setText("ISBN : " + livre.getIsbn());
 
         if (livre.isDisponible()) {
-            holder.tvDisponibilite.setText("✓ Disponible");
-            holder.tvDisponibilite.setBackgroundResource(R.drawable.badge_background);
-            holder.tvDisponibilite.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                            android.graphics.Color.parseColor("#2E7D32")
-                    )
-            );
+            holder.tvDisponibilite.setText("Disponible");
+            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#2E7D32"));
         } else {
-            holder.tvDisponibilite.setText("✗ Indisponible");
-            holder.tvDisponibilite.setBackgroundResource(R.drawable.badge_background);
-            holder.tvDisponibilite.setBackgroundTintList(
-                    android.content.res.ColorStateList.valueOf(
-                            android.graphics.Color.parseColor("#C62828")
-                    )
-            );
+            holder.tvDisponibilite.setText("Indisponible");
+            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#C62828"));
         }
 
-        // Clic simple : ouvrir le détail
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), DetailActivity.class);
-            intent.putExtra("livre", livre);
-            v.getContext().startActivity(intent);
+            if (listener != null) {
+                listener.onLivreClick(livre);
+            }
         });
 
-        // Clic long : ouvrir le formulaire en mode modification
         holder.itemView.setOnLongClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), AddEditActivity.class);
-            intent.putExtra(AddEditActivity.EXTRA_MODE, AddEditActivity.MODE_EDIT);
-            intent.putExtra(AddEditActivity.EXTRA_LIVRE, livre);
-            intent.putExtra(AddEditActivity.EXTRA_POSITION, holder.getAdapterPosition());
-            v.getContext().startActivity(intent);
+            if (listener != null) {
+                int currentPosition = holder.getAdapterPosition();
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    listener.onLivreLongClick(livre, currentPosition);
+                }
+            }
             return true;
         });
     }
