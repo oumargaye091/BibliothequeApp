@@ -43,7 +43,8 @@
             android:inputType="text"
             android:layout_marginBottom="16dp" />
 
-        <Switch
+        <!-- SwitchCompat à la place de Switch -->
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchDisponible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

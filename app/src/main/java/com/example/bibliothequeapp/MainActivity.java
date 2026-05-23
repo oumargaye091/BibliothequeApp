@@ -2,6 +2,8 @@ package com.example.bibliothequeapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerViewLivres;
     private FloatingActionButton fabAjouterLivre;
+    private TextView tvListeVide;
 
     private LivreAdapter livreAdapter;
     private List<Livre> listeLivres;
@@ -38,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerViewLivres = findViewById(R.id.recyclerViewLivres);
         fabAjouterLivre = findViewById(R.id.fabAjouterLivre);
+        tvListeVide = findViewById(R.id.tvListeVide);
 
         database = AppDatabase.getInstance(this);
         executorService = Executors.newSingleThreadExecutor();
@@ -52,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onLivreLongClick(Livre livre, int position) {
-                afficherOptionsLivre(livre);
+                afficherOptionsLivre(livre, position);
             }
         });
 
@@ -71,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-
                         Intent data = result.getData();
                         Livre livre = (Livre) data.getSerializableExtra(AddEditActivity.EXTRA_LIVRE);
                         String mode = data.getStringExtra(AddEditActivity.EXTRA_MODE);
@@ -88,6 +91,17 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    // BONUS 1 : afficher message si liste vide
+    private void mettreAJourVueVide() {
+        if (listeLivres.isEmpty()) {
+            tvListeVide.setVisibility(View.VISIBLE);
+            recyclerViewLivres.setVisibility(View.GONE);
+        } else {
+            tvListeVide.setVisibility(View.GONE);
+            recyclerViewLivres.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void chargerLivresDepuisRoom() {
         executorService.execute(() -> {
             List<Livre> livresDepuisBase = database.livreDao().getAllLivres();
@@ -95,10 +109,12 @@ public class MainActivity extends AppCompatActivity {
                 listeLivres.clear();
                 listeLivres.addAll(livresDepuisBase);
                 livreAdapter.notifyDataSetChanged();
+                mettreAJourVueVide(); // BONUS 1
             });
         });
     }
 
+    // BONUS 5 : notifyItemInserted au lieu de notifyDataSetChanged
     private void ajouterLivreDansRoom(Livre livre) {
         executorService.execute(() -> {
             livre.setId(0);
@@ -110,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // BONUS 6 : notifyItemChanged au lieu de notifyDataSetChanged
     private void modifierLivreDansRoom(Livre livre) {
         executorService.execute(() -> {
             database.livreDao().update(livre);
@@ -120,12 +137,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void supprimerLivreDansRoom(Livre livre) {
+    // BONUS 7 : notifyItemRemoved au lieu de notifyDataSetChanged
+    private void supprimerLivreDansRoom(Livre livre, int position) {
         executorService.execute(() -> {
             database.livreDao().delete(livre);
             runOnUiThread(() -> {
+                listeLivres.remove(position);
+                livreAdapter.notifyItemRemoved(position);
                 Toast.makeText(this, "Livre supprimé 🗑️", Toast.LENGTH_SHORT).show();
-                chargerLivresDepuisRoom();
+                mettreAJourVueVide(); // BONUS 1
             });
         });
     }
@@ -149,26 +169,30 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void afficherOptionsLivre(Livre livre) {
-        String[] options = {"Modifier", "Supprimer"};
-
+    // BONUS 2 & 3 : boîte de dialogue améliorée avec icônes
+    private void afficherOptionsLivre(Livre livre, int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(livre.getTitre());
-        builder.setItems(options, (dialog, which) -> {
-            if (which == 0) {
-                ouvrirFormulaireModification(livre);
-            } else if (which == 1) {
-                confirmerSuppression(livre);
-            }
-        });
+        builder.setTitle("📖 " + livre.getTitre());
+        builder.setMessage("Que voulez-vous faire avec ce livre ?");
+
+        // BONUS 3 : bouton modifier avec icône
+        builder.setPositiveButton("✏️ Modifier", (dialog, which) ->
+                ouvrirFormulaireModification(livre));
+
+        // BONUS 2 : bouton supprimer avec icône
+        builder.setNegativeButton("🗑️ Supprimer", (dialog, which) ->
+                confirmerSuppression(livre, position));
+
+        builder.setNeutralButton("Annuler", null);
         builder.show();
     }
 
-    private void confirmerSuppression(Livre livre) {
+    private void confirmerSuppression(Livre livre, int position) {
         new AlertDialog.Builder(this)
-                .setTitle("Supprimer le livre")
-                .setMessage("Voulez-vous vraiment supprimer \"" + livre.getTitre() + "\" ?")
-                .setPositiveButton("Supprimer", (dialog, which) -> supprimerLivreDansRoom(livre))
+                .setTitle("🗑️ Supprimer le livre")
+                .setMessage("Voulez-vous vraiment supprimer\n\"" + livre.getTitre() + "\" ?")
+                .setPositiveButton("Supprimer", (dialog, which) ->
+                        supprimerLivreDansRoom(livre, position))
                 .setNegativeButton("Annuler", null)
                 .show();
     }

@@ -1,6 +1,7 @@
 package com.example.bibliothequeapp;
 
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,18 +43,24 @@ public class LivreAdapter extends RecyclerView.Adapter<LivreAdapter.LivreViewHol
         holder.tvAuteurLivre.setText("Auteur : " + livre.getAuteur());
         holder.tvIsbnLivre.setText("ISBN : " + livre.getIsbn());
 
+        // BONUS 10 : badge arrondi coloré
+        GradientDrawable badge = new GradientDrawable();
+        badge.setCornerRadius(50f);
+        badge.setPadding(16, 8, 16, 8);
+
         if (livre.isDisponible()) {
-            holder.tvDisponibilite.setText("Disponible");
-            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#2E7D32"));
+            holder.tvDisponibilite.setText("✅ Disponible");
+            badge.setColor(Color.parseColor("#2E7D32"));
         } else {
-            holder.tvDisponibilite.setText("Indisponible");
-            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#C62828"));
+            holder.tvDisponibilite.setText("❌ Indisponible");
+            badge.setColor(Color.parseColor("#C62828"));
         }
 
+        holder.tvDisponibilite.setBackground(badge);
+        holder.tvDisponibilite.setTextColor(Color.WHITE);
+
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onLivreClick(livre);
-            }
+            if (listener != null) listener.onLivreClick(livre);
         });
 
         holder.itemView.setOnLongClickListener(v -> {
