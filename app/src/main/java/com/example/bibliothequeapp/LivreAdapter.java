@@ -35,11 +35,21 @@ public class LivreAdapter extends RecyclerView.Adapter<LivreAdapter.LivreViewHol
         holder.tvIsbnLivre.setText("ISBN : " + livre.getIsbn());
 
         if (livre.isDisponible()) {
-            holder.tvDisponibilite.setText("Disponible");
-            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#2E7D32"));
+            holder.tvDisponibilite.setText("✓ Disponible");
+            holder.tvDisponibilite.setBackgroundResource(R.drawable.badge_background);
+            holder.tvDisponibilite.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(
+                            android.graphics.Color.parseColor("#2E7D32")
+                    )
+            );
         } else {
-            holder.tvDisponibilite.setText("Indisponible");
-            holder.tvDisponibilite.setBackgroundColor(Color.parseColor("#C62828"));
+            holder.tvDisponibilite.setText("✗ Indisponible");
+            holder.tvDisponibilite.setBackgroundResource(R.drawable.badge_background);
+            holder.tvDisponibilite.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(
+                            android.graphics.Color.parseColor("#C62828")
+                    )
+            );
         }
     }
 
