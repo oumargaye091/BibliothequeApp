@@ -13,6 +13,7 @@
         android:theme="@style/Theme.BibliothequeApp">
 
         <activity
+        <!-- main -->
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

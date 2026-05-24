@@ -21,7 +21,7 @@ public class Livre implements Serializable {
         this.isbn = isbn;
         this.disponible = disponible;
     }
-
+    // getter et setter
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public String getTitre() { return titre; }
